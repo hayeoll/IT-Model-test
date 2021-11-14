@@ -1,6 +1,9 @@
 package com.example.ttstest;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
@@ -23,51 +26,47 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btn = (Button) findViewById(R.id.btn);
-
         editText = (EditText) findViewById(R.id.et);
 
         tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
-            public void onInit(int status) {
-                if(status == TextToSpeech.SUCCESS) {
-                    int ttsLang = tts.setLanguage(Locale.US);
-
-                    if ( ttsLang == TextToSpeech.LANG_MISSING_DATA
-                        || ttsLang == TextToSpeech.LANG_NOT_SUPPORTED) {
-                        Log.e("TTS","언어 지원 안함");
-                    } else {
-                        Log.e("TTS","언어 지원함" );
-                    }
+            public void onInit(int state) {
+                if (state == TextToSpeech.SUCCESS) {
+                    tts.setLanguage(Locale.KOREAN);
                 } else {
-                    Toast.makeText(getApplicationContext(), "TTS 초기화 실패!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "TTS 객체 초기화 오류", Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
         btn.setOnClickListener(new View.OnClickListener(){
-
             @Override
             public void onClick(View arg0) {
-                String editData = editText.getText().toString();
-                Log.i("TTS",  "editData: " + editData);
+                new Thread(() -> {
+                    String word = editText.getText().toString();
+                    Papago papago = new Papago();
+                    String resultWord = papago.getTranslation(word, "en");
 
-                public void
-                Papago papago = new Papago();
-                String transData = papago.getTranslation(editData, "en");
-6
-                Log.i("TTS",  "transData: " + transData);
+                    Bundle papagoBundle = new Bundle();
+                    papagoBundle.putString("resultWord", resultWord);
 
-                String data = parseJSON(transData);
-                Log.i("TTS", data + "번역됨");
-
-                int speechStatus = tts.speak(data, TextToSpeech.QUEUE_FLUSH, null);
-
-                if (speechStatus == TextToSpeech.ERROR)  {
-                    Log.e("TTS", "Error in converting Text to Speech!");
-                }
+                    Message msg = papago_handler.obtainMessage();
+                    msg.setData(papagoBundle);
+                    papago_handler.sendMessage(msg);
+                }).start();
             }
         });
     }
+    @SuppressLint("HandlerLeak")
+    Handler papago_handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg){
+            Bundle bundle = msg.getData();
+            String resultWord = bundle.getString("resultWord");
+            Log.i("papago", "resultWord");
+            //tts.speak(text, TextToSpeech.QUEUE_ADD, params, text);
+        }
+    };
 
     @Override
     public void onDestroy() {
@@ -78,6 +77,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+
+/*
     private String parseJSON(String json){
         try{
             JSONObject jsonObject = new JSONObject(json);
@@ -91,5 +93,5 @@ public class MainActivity extends AppCompatActivity {
         }catch (JSONException e) {
             return e.toString();
         }
-    }
+    } */
 }
