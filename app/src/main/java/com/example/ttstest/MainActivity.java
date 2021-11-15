@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -39,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btn.setOnClickListener(new View.OnClickListener(){
+        btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
                 new Thread(() -> {
@@ -57,41 +58,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
     @SuppressLint("HandlerLeak")
-    Handler papago_handler = new Handler(){
+    Handler papago_handler = new Handler() {
         @Override
-        public void handleMessage(Message msg){
+        public void handleMessage(Message msg) {
             Bundle bundle = msg.getData();
             String resultWord = bundle.getString("resultWord");
-            Log.i("papago", "resultWord");
-            //tts.speak(text, TextToSpeech.QUEUE_ADD, params, text);
+            Log.i("papago", resultWord);
+            tts.speak(resultWord, TextToSpeech.QUEUE_FLUSH, null);
         }
     };
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if(tts !=null) {
-            tts.stop();
-            tts.shutdown();
-        }
-    }
-
-
-
-/*
-    private String parseJSON(String json){
-        try{
-            JSONObject jsonObject = new JSONObject(json);
-            JSONObject messageObject = (JSONObject) jsonObject.get("message");
-            JSONObject resultObject = (JSONObject) messageObject.get("result");
-
-            String data = (String) resultObject.get("translatedText");
-
-            return data;
-
-        }catch (JSONException e) {
-            return e.toString();
-        }
-    } */
 }
+
